@@ -1,1 +1,12 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-primary: 'Poppins', sans-serif;
+  --color-primary: #8758ff;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}

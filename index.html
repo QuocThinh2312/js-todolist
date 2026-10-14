@@ -4,8 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>To-do List</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./styles/output.css" />
   </head>
-  <body>
+  <body class="font-primary bg-primary flex items-center justify-center">
+    <div class="bg-[#1a1a40] rounded-md mt-10 inline-flex flex-col text-white p-8 items-center">
+      <h1 class="text-3xl font-medium mb-8">Get Things Done!</h1>
+
+      <form id="todo-form" action="" class="flex mb-8">
+        <input
+          type="text"
+          class="bg-[#1a1a40] px-4 py-2 border min-w-75 border-primary outline-0 text-sm placeholder:text-[#8d8ca0]"
+          placeholder="What is the task today?"
+          spellcheck="false"
+        />
+        <button class="text-sm p-2 bg-primary">Add Task</button>
+      </form>
+
+      <ul id="task-list" class="flex flex-col w-full gap-5"></ul>
+    </div>
+
     <script src="./main.js"></script>
   </body>
 </html>
