@@ -1,6 +1,7 @@
 const todoForm = document.querySelector('#todo-form');
 const taskList = document.querySelector('#task-list');
 const input = document.querySelector('#todo-form > input');
+const emptyMessage = document.querySelector('#empty-message');
 
 const tasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
 
@@ -42,6 +43,13 @@ function appendTaskElement(task, index, isUpdating = false) {
 }
 
 function renderTasks() {
+  if (!tasks.length) {
+    emptyMessage.hidden = false;
+    return;
+  }
+
+  emptyMessage.hidden = true;
+
   tasks.forEach((task, index) => appendTaskElement(task, index));
 }
 
@@ -64,6 +72,7 @@ function addTask(e) {
     tasks.push(newTask);
     saveTasks();
     appendTaskElement(newTask, tasks.length - 1);
+    emptyMessage.hidden = true;
   }
 
   input.value = '';
@@ -157,6 +166,9 @@ function handleTaskActions(e) {
       tasks.splice(taskIndex, 1);
       taskItem.remove();
       saveTasks();
+      if (!tasks.length) {
+        emptyMessage.hidden = false;
+      }
     }
   }
 }
