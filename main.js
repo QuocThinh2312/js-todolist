@@ -3,7 +3,8 @@ const taskList = document.querySelector('#task-list');
 const input = document.querySelector('#todo-form > input');
 const emptyMessage = document.querySelector('#empty-message');
 
-let tasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
+const storedTasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
+const tasks = new Map(storedTasks);
 
 function escapeHTML(data) {
   return data.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
@@ -12,12 +13,12 @@ function escapeHTML(data) {
 function appendTaskElement(task, isUpdating = false) {
   const taskItemEl = document.createElement('li');
   taskItemEl.className = 'bg-primary rounded-md px-4 py-3 transition-opacity duration-150 hover:opacity-90';
-  taskItemEl.dataset.id = task.id;
+  taskItemEl.dataset.title = task.title.toLowerCase();
   taskItemEl.innerHTML = `
             <div class="task-wrapper flex items-center justify-between">
               <span data-role="title" title="Click to mark this task as done" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${escapeHTML(task.title)}</span>
               <div class="flex items-center gap-3">
-                <button data-role="edit" title="Edit task" class="transition-scale duratio150 hover:scale-110 active:opacity-80">
+                <button data-role="edit" title="Edit task" class="transition-transform duration-150 hover:scale-110 active:opacity-80">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path
                     stroke-linecap="round"
@@ -26,8 +27,8 @@ function appendTaskElement(task, isUpdating = false) {
                   />
                  </svg>
                 </button>
-                
-                <button data-role="delete" title="Delete task" class="transition-scale duration-150 hover:scale-110 active:opacity-80">
+
+                <button data-role="delete" title="Delete task" class="transition-transform duration-150 hover:scale-110 active:opacity-80">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path
                       stroke-linecap="round"
@@ -46,7 +47,7 @@ function appendTaskElement(task, isUpdating = false) {
 }
 
 function renderTasks() {
-  if (!tasks.length) {
+  if (!tasks.size) {
     emptyMessage.hidden = false;
     return;
   }
@@ -65,13 +66,13 @@ function addTask(e) {
   }
 
   const newTask = {
-    id: Date.now().toString(),
     title: newTitle,
     hasCompleted: false,
   };
+  const newKey = newTitle.toLowerCase();
 
-  if (!isDuplicateTask(newTitle)) {
-    tasks.push(newTask);
+  if (!isDuplicateTask(newKey)) {
+    tasks.set(newKey, newTask);
     saveTasks();
     appendTaskElement(newTask);
     emptyMessage.hidden = true;
@@ -81,11 +82,11 @@ function addTask(e) {
 }
 
 function saveTasks() {
-  localStorage.setItem('tasks', JSON.stringify(tasks));
+  localStorage.setItem('tasks', JSON.stringify([...tasks]));
 }
 
-function isDuplicateTask(newTitle, ignoreId = null) {
-  const isDuplicate = tasks.some((task) => task.title.toLowerCase() === newTitle.toLowerCase() && task.id !== ignoreId);
+function isDuplicateTask(newKey, ignoreKey = null) {
+  const isDuplicate = tasks.has(newKey) && newKey !== ignoreKey;
 
   if (isDuplicate) {
     alert('Task with this title already exists! Please use a different task title!');
@@ -94,29 +95,18 @@ function isDuplicateTask(newTitle, ignoreId = null) {
   return isDuplicate;
 }
 
-function getTaskById(taskId) {
-  let l = 0;
-  let r = tasks.length - 1;
-  while (l <= r) {
-    const m = Math.floor((l + r) / 2);
-    if (+tasks[m].id === +taskId) return tasks[m];
-    if (+tasks[m].id < +taskId) l = m + 1;
-    else r = m - 1;
-  }
-  return null;
-}
-
 function handleTaskActions(e) {
   const titleEl = e.target.closest('[data-role="title"]');
   const editBtn = e.target.closest('[data-role="edit"]');
   const deleteBtn = e.target.closest('[data-role="delete"]');
-
   if (!titleEl && !editBtn && !deleteBtn) return;
 
   const taskItemEl = e.target.closest('li');
-  const task = getTaskById(taskItemEl.dataset.id);
+  if (!taskItemEl) return;
 
-  if (!taskItemEl || !task) return;
+  const taskKey = taskItemEl.dataset.title;
+  const task = tasks.get(taskKey);
+  if (!task) return;
 
   if (titleEl) {
     task.hasCompleted = !task.hasCompleted;
@@ -167,13 +157,23 @@ function handleTaskActions(e) {
         return;
       }
 
-      if (isDuplicateTask(newTitle, task.id)) {
+      const newKey = newTitle.toLowerCase();
+      if (isDuplicateTask(newKey, taskKey)) {
         inputUpdate.value = '';
         inputUpdate.focus();
         return;
       }
 
       task.title = newTitle;
+
+      if (newKey !== taskKey) {
+        const entries = [...tasks];
+        tasks.clear();
+        for (const [key, value] of entries) {
+          tasks.set(key === taskKey ? newKey : key, value);
+        }
+      }
+
       const newTaskEl = appendTaskElement(task, true);
       taskItemEl.replaceWith(newTaskEl);
       saveTasks();
@@ -185,10 +185,10 @@ function handleTaskActions(e) {
   if (deleteBtn) {
     const isConfirmed = confirm(`Are you sure you want to delete "${task.title}"?`);
     if (isConfirmed) {
-      tasks = tasks.filter((taskItem) => task.id !== taskItem.id);
+      tasks.delete(taskKey);
       taskItemEl.remove();
       saveTasks();
-      if (!tasks.length) {
+      if (!tasks.size) {
         emptyMessage.hidden = false;
       }
     }

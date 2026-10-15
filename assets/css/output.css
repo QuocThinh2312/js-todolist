@@ -242,9 +242,6 @@
   .bg-\[\#1a1a40\] {
     background-color: #1a1a40;
   }
-  .bg-black {
-    background-color: var(--color-black);
-  }
   .bg-primary {
     background-color: var(--color-primary);
   }
@@ -324,10 +321,6 @@
     --tw-duration: 150ms;
     transition-duration: 150ms;
   }
-  .duration-200 {
-    --tw-duration: 200ms;
-    transition-duration: 200ms;
-  }
   .select-none {
     -webkit-user-select: none;
     user-select: none;
@@ -336,26 +329,11 @@
     color: #8d8ca0;
   }
   @media (hover: hover) {
-    .hover\:-translate-y-\[2px\]:hover {
-      --tw-translate-y: calc(2px * -1);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-    .hover\:-translate-y-\[4px\]:hover {
-      --tw-translate-y: calc(4px * -1);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-    .hover\:translate-y-\[4px\]:hover {
-      --tw-translate-y: 4px;
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
     .hover\:scale-110:hover {
       --tw-scale-x: 110%;
       --tw-scale-y: 110%;
       --tw-scale-z: 110%;
       scale: var(--tw-scale-x) var(--tw-scale-y);
-    }
-    .hover\:opacity-80:hover {
-      opacity: 80%;
     }
     .hover\:opacity-90:hover {
       opacity: 90%;
@@ -389,21 +367,6 @@
   syntax: "*";
   inherits: false;
 }
-@property --tw-translate-x {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-y {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-z {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
 @property --tw-scale-x {
   syntax: "*";
   inherits: false;
@@ -426,9 +389,6 @@
       --tw-font-weight: initial;
       --tw-outline-style: solid;
       --tw-duration: initial;
-      --tw-translate-x: 0;
-      --tw-translate-y: 0;
-      --tw-translate-z: 0;
       --tw-scale-x: 1;
       --tw-scale-y: 1;
       --tw-scale-z: 1;
