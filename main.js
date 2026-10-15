@@ -3,17 +3,17 @@ const taskList = document.querySelector('#task-list');
 const input = document.querySelector('#todo-form > input');
 const emptyMessage = document.querySelector('#empty-message');
 
-const tasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
+let tasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
 
 function escapeHTML(data) {
   return data.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
-function appendTaskElement(task, index, isUpdating = false) {
-  const taskItem = document.createElement('li');
-  taskItem.className = 'bg-primary rounded-md px-4 py-3';
-  taskItem.setAttribute('data-index', index);
-  taskItem.innerHTML = `
+function appendTaskElement(task, isUpdating = false) {
+  const taskItemEl = document.createElement('li');
+  taskItemEl.className = 'bg-primary rounded-md px-4 py-3';
+  taskItemEl.dataset.id = task.id;
+  taskItemEl.innerHTML = `
             <div class="task-wrapper flex items-center justify-between">
               <span data-role="title" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${escapeHTML(task.title)}</span>
               <div class="flex items-center gap-3">
@@ -40,9 +40,9 @@ function appendTaskElement(task, index, isUpdating = false) {
             </div>`;
 
   if (isUpdating) {
-    return taskItem;
+    return taskItemEl;
   }
-  taskList.prepend(taskItem);
+  taskList.prepend(taskItemEl);
 }
 
 function renderTasks() {
@@ -50,10 +50,8 @@ function renderTasks() {
     emptyMessage.hidden = false;
     return;
   }
-
   emptyMessage.hidden = true;
-
-  tasks.forEach((task, index) => appendTaskElement(task, index));
+  tasks.forEach((task) => appendTaskElement(task));
 }
 
 function addTask(e) {
@@ -67,14 +65,15 @@ function addTask(e) {
   }
 
   const newTask = {
+    id: Date.now().toString(),
     title: newTitle,
     hasCompleted: false,
   };
 
-  if (!isDuplicateTask(newTitle)) {
+  if (!isDuplicateTask(newTask)) {
     tasks.push(newTask);
     saveTasks();
-    appendTaskElement(newTask, tasks.length - 1);
+    appendTaskElement(newTask);
     emptyMessage.hidden = true;
   }
 
@@ -85,8 +84,8 @@ function saveTasks() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-function isDuplicateTask(newTitle, currentIndex = null) {
-  const isDuplicate = tasks.some((task, index) => task.title.toLowerCase() === newTitle.toLowerCase() && index !== currentIndex);
+function isDuplicateTask(newTask) {
+  const isDuplicate = tasks.some((task) => task.title.toLowerCase() === newTask.title.toLowerCase() && task.id !== newTask.id);
 
   if (isDuplicate) {
     alert('Task with this title already exists! Please use a different task title!');
@@ -102,10 +101,9 @@ function handleTaskActions(e) {
 
   if (!titleEl && !editBtn && !deleteBtn) return;
 
-  const taskItem = e.target.closest('li');
-  const taskIndex = +taskItem.dataset.index;
-  const task = tasks[taskIndex];
-  const originalTaskItem = taskItem.cloneNode(true);
+  const taskItemEl = e.target.closest('li');
+  const originalTaskItemEl = taskItemEl.cloneNode(true);
+  const task = tasks.find((task) => task.id === taskItemEl.dataset.id);
 
   if (titleEl) {
     task.hasCompleted = !task.hasCompleted;
@@ -127,18 +125,18 @@ function handleTaskActions(e) {
         />
         <button class="text-sm p-2 bg-primary w-full">Save</button>
       </form>`;
-    taskItem.innerHTML = html;
-    taskItem.className = '';
+    taskItemEl.innerHTML = html;
+    taskItemEl.className = '';
 
-    const formUpdate = taskItem.querySelector('form');
-    const inputUpdate = taskItem.querySelector('form > input');
+    const formUpdate = taskItemEl.querySelector('form');
+    const inputUpdate = taskItemEl.querySelector('form > input');
 
     inputUpdate.focus();
     inputUpdate.setSelectionRange(inputUpdate.value.length, inputUpdate.value.length); //Đặt dấu nháy về cuối text
 
     inputUpdate.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        taskItem.replaceWith(originalTaskItem);
+        taskItemEl.replaceWith(originalTaskItemEl);
       }
     });
 
@@ -148,17 +146,21 @@ function handleTaskActions(e) {
       const newTitle = inputUpdate.value.trim();
       if (!newTitle) {
         alert('Task title cannot be empty!');
-      }
-
-      if (!newTitle || isDuplicateTask(newTitle, taskIndex)) {
         inputUpdate.value = '';
         inputUpdate.focus();
         return;
       }
 
-      const newTask = appendTaskElement(tasks[taskIndex], taskIndex, true);
-      tasks[taskIndex].title = newTitle;
-      taskItem.replaceWith(newTask);
+      task.title = newTitle;
+
+      if (isDuplicateTask(task)) {
+        inputUpdate.value = '';
+        inputUpdate.focus();
+        return;
+      }
+
+      const newTaskEl = appendTaskElement(task, true);
+      taskItemEl.replaceWith(newTaskEl);
       saveTasks();
     });
 
@@ -168,8 +170,8 @@ function handleTaskActions(e) {
   if (deleteBtn) {
     const isConfirmed = confirm(`Are you sure you want to delete "${task.title}"?`);
     if (isConfirmed) {
-      tasks.splice(taskIndex, 1);
-      taskItem.remove();
+      tasks = tasks.filter((taskItem) => task.id !== taskItem.id);
+      taskItemEl.remove();
       saveTasks();
       if (!tasks.length) {
         emptyMessage.hidden = false;
