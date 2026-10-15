@@ -5,13 +5,17 @@ const emptyMessage = document.querySelector('#empty-message');
 
 const tasks = JSON.parse(localStorage.getItem('tasks')) ?? [];
 
+function escapeHTML(data) {
+  return data.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
 function appendTaskElement(task, index, isUpdating = false) {
   const taskItem = document.createElement('li');
-  taskItem.classList = 'bg-primary rounded-md px-4 py-3';
+  taskItem.className = 'bg-primary rounded-md px-4 py-3';
   taskItem.setAttribute('data-index', index);
   taskItem.innerHTML = `
             <div class="task-wrapper flex items-center justify-between">
-              <span data-role="title" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${task.title}</span>
+              <span data-role="title" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${escapeHTML(task.title)}</span>
               <div class="flex items-center gap-3">
                 <button data-role="edit">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -36,8 +40,7 @@ function appendTaskElement(task, index, isUpdating = false) {
             </div>`;
 
   if (isUpdating) {
-    taskList.insertBefore(taskItem, taskList.children[tasks.length - index - 1]);
-    return;
+    return taskItem;
   }
   taskList.prepend(taskItem);
 }
@@ -82,8 +85,8 @@ function saveTasks() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-function isDuplicateTask(newTitle, currentTitle = null) {
-  const isDuplicate = tasks.some((task) => task.title.toLowerCase() === newTitle.toLowerCase() && newTitle !== currentTitle);
+function isDuplicateTask(newTitle, currentIndex = null) {
+  const isDuplicate = tasks.some((task, index) => task.title.toLowerCase() === newTitle.toLowerCase() && index !== currentIndex);
 
   if (isDuplicate) {
     alert('Task with this title already exists! Please use a different task title!');
@@ -93,49 +96,51 @@ function isDuplicateTask(newTitle, currentTitle = null) {
 }
 
 function handleTaskActions(e) {
-  const title = e.target.closest('[data-role="title"]');
+  const titleEl = e.target.closest('[data-role="title"]');
   const editBtn = e.target.closest('[data-role="edit"]');
   const deleteBtn = e.target.closest('[data-role="delete"]');
 
-  if (!title && !editBtn && !deleteBtn) return;
+  if (!titleEl && !editBtn && !deleteBtn) return;
 
   const taskItem = e.target.closest('li');
   const taskIndex = +taskItem.dataset.index;
   const task = tasks[taskIndex];
+  const originalTaskItem = taskItem.cloneNode(true);
 
-  if (title) {
+  if (titleEl) {
     task.hasCompleted = !task.hasCompleted;
-    if (task.hasCompleted) {
-      title.classList.add('line-through', 'text-white/60');
-    } else {
-      title.classList.remove('line-through', 'text-white/60');
-    }
+    titleEl.classList.toggle('line-through', task.hasCompleted);
+    titleEl.classList.toggle('text-white/60', task.hasCompleted);
     saveTasks();
     return;
   }
 
   if (editBtn) {
-    const taskWrapper = taskItem.querySelector('.task-wrapper');
     const html = `
-      <form id="update-form" action="" class="flex">
+      <form action="" class="flex">
         <input
           type="text"
           class="bg-[#1a1a40] px-4 py-2 border min-w-75 border-primary outline-0 text-sm placeholder:text-[#8d8ca0]"
           placeholder="Update task"
           spellcheck="false"
-          value=${task.title}
+          value="${task.title}"
         />
         <button class="text-sm p-2 bg-primary w-full">Save</button>
       </form>`;
-    taskItem.removeChild(taskWrapper);
     taskItem.innerHTML = html;
-    taskItem.classList = '';
+    taskItem.className = '';
 
-    const formUpdate = taskItem.querySelector('#update-form');
-    const inputUpdate = taskItem.querySelector('#update-form > input');
+    const formUpdate = taskItem.querySelector('form');
+    const inputUpdate = taskItem.querySelector('form > input');
 
     inputUpdate.focus();
     inputUpdate.setSelectionRange(inputUpdate.value.length, inputUpdate.value.length); //Đặt dấu nháy về cuối text
+
+    inputUpdate.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        taskItem.replaceWith(originalTaskItem);
+      }
+    });
 
     formUpdate.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -145,15 +150,15 @@ function handleTaskActions(e) {
         alert('Task title cannot be empty!');
       }
 
-      if (!newTitle || isDuplicateTask(newTitle, task.title)) {
+      if (!newTitle || isDuplicateTask(newTitle, taskIndex)) {
         inputUpdate.value = '';
         inputUpdate.focus();
         return;
       }
 
+      const newTask = appendTaskElement(tasks[taskIndex], taskIndex, true);
       tasks[taskIndex].title = newTitle;
-      taskItem.remove();
-      appendTaskElement(tasks[taskIndex], taskIndex, true);
+      taskItem.replaceWith(newTask);
       saveTasks();
     });
 
