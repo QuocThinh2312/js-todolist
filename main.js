@@ -70,7 +70,7 @@ function addTask(e) {
     hasCompleted: false,
   };
 
-  if (!isDuplicateTask(newTask)) {
+  if (!isDuplicateTask(newTitle)) {
     tasks.push(newTask);
     saveTasks();
     appendTaskElement(newTask);
@@ -84,14 +84,26 @@ function saveTasks() {
   localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-function isDuplicateTask(newTask) {
-  const isDuplicate = tasks.some((task) => task.title.toLowerCase() === newTask.title.toLowerCase() && task.id !== newTask.id);
+function isDuplicateTask(newTitle, ignoreId = null) {
+  const isDuplicate = tasks.some((task) => task.title.toLowerCase() === newTitle.toLowerCase() && task.id !== ignoreId);
 
   if (isDuplicate) {
     alert('Task with this title already exists! Please use a different task title!');
   }
 
   return isDuplicate;
+}
+
+function getTaskById(taskId) {
+  let l = 0;
+  let r = tasks.length - 1;
+  while (l <= r) {
+    const m = Math.floor((l + r) / 2);
+    if (+tasks[m].id === +taskId) return tasks[m];
+    if (+tasks[m].id < +taskId) l = m + 1;
+    else r = m - 1;
+  }
+  return null;
 }
 
 function handleTaskActions(e) {
@@ -102,8 +114,9 @@ function handleTaskActions(e) {
   if (!titleEl && !editBtn && !deleteBtn) return;
 
   const taskItemEl = e.target.closest('li');
-  const originalTaskItemEl = taskItemEl.cloneNode(true);
-  const task = tasks.find((task) => task.id === taskItemEl.dataset.id);
+  const task = getTaskById(taskItemEl.dataset.id);
+
+  if (!taskItemEl || !task) return;
 
   if (titleEl) {
     task.hasCompleted = !task.hasCompleted;
@@ -114,6 +127,7 @@ function handleTaskActions(e) {
   }
 
   if (editBtn) {
+    const originalTaskItemEl = taskItemEl.cloneNode(true);
     const html = `
       <form action="" class="flex">
         <input
@@ -121,7 +135,7 @@ function handleTaskActions(e) {
           class="bg-[#1a1a40] px-4 py-2 border min-w-75 border-primary outline-0 text-sm placeholder:text-[#8d8ca0]"
           placeholder="Update task"
           spellcheck="false"
-          value="${task.title}"
+          value="${escapeHTML(task.title)}"
         />
         <button class="text-sm p-2 bg-primary w-full">Save</button>
       </form>`;
@@ -130,6 +144,8 @@ function handleTaskActions(e) {
 
     const formUpdate = taskItemEl.querySelector('form');
     const inputUpdate = taskItemEl.querySelector('form > input');
+
+    if (!formUpdate || !inputUpdate) return;
 
     inputUpdate.focus();
     inputUpdate.setSelectionRange(inputUpdate.value.length, inputUpdate.value.length); //Đặt dấu nháy về cuối text
@@ -151,14 +167,13 @@ function handleTaskActions(e) {
         return;
       }
 
-      task.title = newTitle;
-
-      if (isDuplicateTask(task)) {
+      if (isDuplicateTask(newTitle, task.id)) {
         inputUpdate.value = '';
         inputUpdate.focus();
         return;
       }
 
+      task.title = newTitle;
       const newTaskEl = appendTaskElement(task, true);
       taskItemEl.replaceWith(newTaskEl);
       saveTasks();
