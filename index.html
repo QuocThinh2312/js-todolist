@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>To-do List</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="./assets/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="./assets/favicon/site.webmanifest" />
+
+    <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,7 +20,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="./styles/output.css" />
+    <link rel="stylesheet" href="./assets/css/output.css" />
   </head>
   <body class="font-primary bg-primary flex items-center justify-center">
     <div class="bg-[#1a1a40] rounded-md mt-10 inline-flex flex-col text-white p-8 items-center">
@@ -25,7 +33,7 @@
           placeholder="What is the task today?"
           spellcheck="false"
         />
-        <button class="text-sm p-2 bg-primary">Add Task</button>
+        <button class="text-sm p-2 bg-primary transition-scale duration-150 hover:scale-110 active:opacity-80">Add Task</button>
       </form>
 
       <ul id="task-list" class="flex flex-col w-full gap-5"></ul>

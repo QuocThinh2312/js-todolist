@@ -8,5 +8,6 @@
 @layer base {
   button {
     cursor: pointer;
+    user-select: none;
   }
 }

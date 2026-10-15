@@ -11,13 +11,13 @@ function escapeHTML(data) {
 
 function appendTaskElement(task, isUpdating = false) {
   const taskItemEl = document.createElement('li');
-  taskItemEl.className = 'bg-primary rounded-md px-4 py-3';
+  taskItemEl.className = 'bg-primary rounded-md px-4 py-3 transition-opacity duration-150 hover:opacity-90';
   taskItemEl.dataset.id = task.id;
   taskItemEl.innerHTML = `
             <div class="task-wrapper flex items-center justify-between">
-              <span data-role="title" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${escapeHTML(task.title)}</span>
+              <span data-role="title" title="Click to mark this task as done" class="cursor-pointer select-none ${task.hasCompleted ? 'line-through text-white/60' : ''}">${escapeHTML(task.title)}</span>
               <div class="flex items-center gap-3">
-                <button data-role="edit">
+                <button data-role="edit" title="Edit task" class="transition-scale duratio150 hover:scale-110 active:opacity-80">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path
                     stroke-linecap="round"
@@ -27,7 +27,7 @@ function appendTaskElement(task, isUpdating = false) {
                  </svg>
                 </button>
                 
-                <button data-role="delete">
+                <button data-role="delete" title="Delete task" class="transition-scale duration-150 hover:scale-110 active:opacity-80">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path
                       stroke-linecap="round"
