@@ -10,8 +10,9 @@ function escapeHTML(data) {
   return data.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 }
 
-function appendTaskElement(task, isUpdating = false) {
+function createTaskElement(task) {
   const taskItemEl = document.createElement('li');
+
   taskItemEl.className = 'bg-primary rounded-md px-4 py-3 transition-opacity duration-150 hover:opacity-90';
   taskItemEl.dataset.title = task.title.toLowerCase();
   taskItemEl.innerHTML = `
@@ -40,10 +41,7 @@ function appendTaskElement(task, isUpdating = false) {
               </div>
             </div>`;
 
-  if (isUpdating) {
-    return taskItemEl;
-  }
-  taskList.prepend(taskItemEl);
+  return taskItemEl;
 }
 
 function renderTasks() {
@@ -52,7 +50,13 @@ function renderTasks() {
     return;
   }
   emptyMessage.hidden = true;
-  tasks.forEach((task) => appendTaskElement(task));
+
+  const fragmentNode = document.createDocumentFragment();
+  tasks.forEach((task) => {
+    const taskItemEl = createTaskElement(task);
+    fragmentNode.prepend(taskItemEl);
+  });
+  taskList.prepend(fragmentNode);
 }
 
 function addTask(e) {
@@ -74,8 +78,10 @@ function addTask(e) {
   if (!isDuplicateTask(newKey)) {
     tasks.set(newKey, newTask);
     saveTasks();
-    appendTaskElement(newTask);
     emptyMessage.hidden = true;
+
+    const taskItemEl = createTaskElement(newTask);
+    taskList.prepend(taskItemEl);
   }
 
   input.value = '';
@@ -174,8 +180,8 @@ function handleTaskActions(e) {
         }
       }
 
-      const newTaskEl = appendTaskElement(task, true);
-      taskItemEl.replaceWith(newTaskEl);
+      const newTaskItemEl = createTaskElement(task);
+      taskItemEl.replaceWith(newTaskItemEl);
       saveTasks();
     });
 
